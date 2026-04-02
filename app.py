@@ -11,10 +11,11 @@ import os, re
 
 app = Flask(__name__)
 
-client = OpenAI(
-    api_key=os.environ.get("DEEPSEEK_API_KEY"),
-    base_url="https://api.deepseek.com",
-)
+def get_client():
+    return OpenAI(
+        api_key=os.environ.get("DEEPSEEK_API_KEY"),
+        base_url="https://api.deepseek.com",
+    )
 
 SYSTEM_PROMPT = """
 你是"小熊"，魔袋熊AI情感伙伴，专为6到12岁的孩子设计。
@@ -202,7 +203,7 @@ def chat():
     history = sessions[session_id]
     history.append({"role": "user", "content": user_msg})
 
-    response = client.chat.completions.create(
+    response = get_client().chat.completions.create(
         model="deepseek-chat",
         max_tokens=200,
         messages=[{"role": "system", "content": SYSTEM_PROMPT}] + history[-10:]
