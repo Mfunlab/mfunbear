@@ -405,6 +405,11 @@ async function speakAli(text) {
   setAv('speaking');
   setBtn('off');
 
+  const done = () => {
+    isSpeaking = false;
+    setAv(''); setBtn('');
+  };
+
   try {
     const res = await fetch('/tts', {
       method: 'POST',
@@ -419,31 +424,46 @@ async function speakAli(text) {
 
     if (currentAudio) { currentAudio.pause(); currentAudio = null; }
 
-    const audio = new Audio(url);
-    currentAudio = audio;
+    await new Promise((resolve) => {
+      const audio = new Audio(url);
+      currentAudio = audio;
 
-    audio.onended = audio.onerror = () => {
-      isSpeaking = false;
-      setAv(''); setBtn('');
-      URL.revokeObjectURL(url);
-      currentAudio = null;
-    };
+      const finish = () => {
+        URL.revokeObjectURL(url);
+        currentAudio = null;
+        resolve();
+      };
 
-    await audio.play();
+      audio.onended  = finish;
+      audio.onerror  = finish;
+
+      // 安全兜底：最多等音频时长+3秒后强制resolve
+      audio.onloadedmetadata = () => {
+        const maxWait = (audio.duration || 10) * 1000 + 3000;
+        setTimeout(resolve, maxWait);
+      };
+
+      audio.play().catch(() => { finish(); });
+    });
+
   } catch(e) {
-    console.warn('Ali TTS failed, fallback to browser TTS:', e);
-    speakFallback(text);
+    console.warn('Ali TTS failed, fallback:', e);
+    await new Promise((resolve) => speakFallback(text, resolve));
+  }
+
+  done();
+}
   }
 }
 
-function speakFallback(text) {
+function speakFallback(text, callback) {
   if (speechSynthesis.speaking) speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.lang = 'zh-CN'; u.rate = 0.88; u.pitch = 1.2;
   const voices = speechSynthesis.getVoices();
   const zh = voices.find(v => v.lang.startsWith('zh-CN')) || voices.find(v => v.lang.startsWith('zh'));
   if (zh) u.voice = zh;
-  u.onend = u.onerror = () => { isSpeaking = false; setAv(''); setBtn(''); };
+  u.onend = u.onerror = () => { if (callback) callback(); };
   speechSynthesis.speak(u);
 }
 
