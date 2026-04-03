@@ -252,7 +252,31 @@ HTML = """<!DOCTYPE html>
 </style>
 </head>
 <body>
-<div class="scene">
+
+<div id="welcome" style="
+  min-height:100vh; min-height:100dvh;
+  display:flex; flex-direction:column;
+  align-items:center; justify-content:center;
+  background:#FFF6EC; padding:40px 24px;
+  text-align:center;">
+  <span style="font-size:96px;line-height:1;margin-bottom:24px;">🐻</span>
+  <h1 style="font-size:24px;font-weight:600;color:#5D3A1A;margin-bottom:8px;">小熊来啦</h1>
+  <p style="font-size:15px;color:#C0A07A;margin-bottom:48px;line-height:1.6;">
+    来自神秘森林王国的好朋友<br>想听你说说今天的故事～
+  </p>
+  <div id="enter-btn" style="
+    width:160px; height:160px; border-radius:50%;
+    background:#F09030; cursor:pointer;
+    display:flex; align-items:center; justify-content:center;
+    box-shadow:0 6px 24px rgba(240,130,40,0.35);
+    animation:breathe 3s ease-in-out infinite;
+    position:relative;">
+    <div style="width:48px;height:48px;border-radius:50%;background:white;"></div>
+  </div>
+  <p style="margin-top:24px;font-size:13px;color:#C8A880;">点击进入，和小熊说话</p>
+</div>
+
+<div id="main" class="scene" style="display:none;">
 
   <div class="avatar-wrap" id="av">
     <span class="avatar">🐻</span>
@@ -274,7 +298,7 @@ HTML = """<!DOCTYPE html>
 
   <p class="hint" id="hint">按住说话 &nbsp;·&nbsp; 松开发送</p>
 
-</div>
+</div><!-- /main -->
 
 <script>
 const SID = 's' + Date.now();
@@ -449,12 +473,26 @@ btn.addEventListener('mouseleave', () => { if (isListening) stopListen(); });
 btn.addEventListener('touchend',   e => { e.preventDefault(); stopListen(); }, { passive: false });
 btn.addEventListener('touchcancel',() => { if (isListening) stopListen(); });
 
-// ── 预加载语音列表 + 开场白 ──
-speechSynthesis.onvoiceschanged = () => {};
-window.addEventListener('load', () => {
+// ── 欢迎屏：点击后才进入，触发浏览器音频权限 ──
+const welcomeEl = document.getElementById('welcome');
+const mainEl    = document.getElementById('main');
+
+document.getElementById('enter-btn').addEventListener('click', () => {
+  welcomeEl.style.display = 'none';
+  mainEl.style.display = 'flex';
   speechSynthesis.getVoices();
-  setTimeout(() => speak('嗨～我是小熊！今天有没有什么特别好玩的，或者特别烦的事？快跟我说说！'), 900);
+  setTimeout(() => speak('嗨～我是小熊！今天有没有什么特别好玩的，或者特别烦的事？快跟我说说！'), 400);
 });
+
+document.getElementById('enter-btn').addEventListener('touchend', (e) => {
+  e.preventDefault();
+  welcomeEl.style.display = 'none';
+  mainEl.style.display = 'flex';
+  speechSynthesis.getVoices();
+  setTimeout(() => speak('嗨～我是小熊！今天有没有什么特别好玩的，或者特别烦的事？快跟我说说！'), 400);
+});
+
+speechSynthesis.onvoiceschanged = () => {};
 </script>
 </body>
 </html>"""
