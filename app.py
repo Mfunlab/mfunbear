@@ -453,8 +453,6 @@ async function speakAli(text) {
 
   done();
 }
-  }
-}
 
 function speakFallback(text, callback) {
   if (speechSynthesis.speaking) speechSynthesis.cancel();
@@ -545,4 +543,3 @@ if __name__ == "__main__":
     print("本地访问：http://127.0.0.1:5000")
     print("=" * 40 + "\n")
     app.run(debug=False, host="0.0.0.0", port=5000)
-
