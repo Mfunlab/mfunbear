@@ -313,7 +313,7 @@ HTML = """<!DOCTYPE html>
     <div class="outer"></div>
     <div class="inner"></div>
   </div>
-  <p class="hint">按住说话 &nbsp;·&nbsp; 松开发送</p>
+  <p class="hint">点击说话 &nbsp;·&nbsp; 再点发送</p>
 </div>
 
 <script>
@@ -371,8 +371,8 @@ function startListen() {
 
 function stopListen() {
   if (!isListening) return;
-  setBtn('off');
   viz.classList.remove('on');
+  setBtn('off');
   try { recognition.stop(); } catch(e) {}
 }
 
@@ -465,12 +465,17 @@ function speakFallback(text, callback) {
   speechSynthesis.speak(u);
 }
 
-btn.addEventListener('mousedown',   e => { e.preventDefault(); startListen(); });
-btn.addEventListener('touchstart',  e => { e.preventDefault(); startListen(); }, { passive: false });
-btn.addEventListener('mouseup',     () => stopListen());
-btn.addEventListener('mouseleave',  () => { if (isListening) stopListen(); });
-btn.addEventListener('touchend',    e => { e.preventDefault(); stopListen(); }, { passive: false });
-btn.addEventListener('touchcancel', () => { if (isListening) stopListen(); });
+function toggleListen() {
+  if (isSpeaking) return;
+  if (isListening) {
+    stopListen();
+  } else {
+    startListen();
+  }
+}
+
+btn.addEventListener('click',    e => { e.preventDefault(); toggleListen(); });
+btn.addEventListener('touchend', e => { e.preventDefault(); toggleListen(); }, { passive: false });
 
 function enterMain() {
   document.getElementById('welcome').style.display = 'none';
@@ -543,3 +548,4 @@ if __name__ == "__main__":
     print("本地访问：http://127.0.0.1:5000")
     print("=" * 40 + "\n")
     app.run(debug=False, host="0.0.0.0", port=5000)
+
